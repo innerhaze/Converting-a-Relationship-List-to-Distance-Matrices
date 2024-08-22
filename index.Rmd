@@ -1,0 +1,59 @@
+---
+title: "Converting a Relationship List to Distance Matrices"
+author: "Sebastián Sánchez Cuartas"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+      position: "left"
+    theme: flatly
+    highlight: tango
+---
+
+# **Introduction**
+
+The following code takes a CSV file containing a relationship list (also known as an incidence table) and converts it into three separate distance matrices. Each matrix corresponds to one of the three columns representing different indices: Dist, DistM, and CF. The code then saves each of the matrices independently.
+
+```{r eval=FALSE}
+
+# Read the CSV file containing the final results from the vector created in the previous step
+output_path <- read.csv("C:/Your/Path/csv", stringsAsFactors = FALSE)
+
+# Get unique values of ID1 and ID2, and sort them
+id_values <- sort(unique(c(output_path$ID1, output_path$ID2)))
+
+# Create a directory to store the square matrices
+destination_directory <- "C:/Your/Path/To/Matrix_Results/"
+
+dir.create(destination_directory, showWarnings = FALSE)
+
+# Iterate over each metric (column)
+for (metric in c("Dist", "DistM", "CF_beta0_graph1", "CF_beta1_graph1")) {
+  # Create an empty distance matrix
+  square_matrix <- matrix(NA, nrow = length(id_values), ncol = length(id_values), 
+                          dimnames = list(id_values, id_values)) # Add more concatenated columns if necessary
+  
+  # Fill the matrix with corresponding values
+  for (i in 1:nrow(output_path)) {
+    id1 <- output_path[i, "ID1"]
+    id2 <- output_path[i, "ID2"]
+    value <- output_path[i, metric]
+    square_matrix[id1, id2] <- value
+    square_matrix[id2, id1] <- value
+  }
+  
+  # Save the matrix to a CSV file
+  write.csv(square_matrix, file = paste0(destination_directory, metric, ".csv"))
+}
+
+
+```
+
+```{r echo=FALSE, fig.align='center', fig.cap="**Figure 1**. *The transformation from a relationship list (incidence table) to a distance matrix is shown, where each created index (Dist, DistM, and CF) is split into three separate matrices. The dashes represent missing data in these matrices, as only the available data from the example is being considered.*", out.width='140%'}
+knitr::include_graphics("transf.jpg")
+
+```
